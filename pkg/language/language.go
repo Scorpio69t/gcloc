@@ -1,12 +1,20 @@
 package language
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"gcloc/pkg/option"
 	"gcloc/pkg/utils"
+	"github.com/go-enry/go-enry/v2"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
+	"unicode"
 )
 
 // GClocLanguage is provided for xml-cloc and json format.
@@ -35,8 +43,8 @@ type Language struct {
 type Languages []Language
 
 var (
-	shebangEnv  = regexp.MustCompile(`^#! *(\S+/env) ([a-zA-Z]+)`)
-	shebangLang = regexp.MustCompile(`^#! *[.a-zA-Z/]+/([a-zA-Z]+)`)
+	reShebangEnv  = regexp.MustCompile(`^#! *(\S+/env) ([a-zA-Z]+)`)
+	reShebangLang = regexp.MustCompile(`^#! *[.a-zA-Z/]+/([a-zA-Z]+)`)
 )
 
 // SortByName sorts the languages by name. (ASC)
@@ -362,4 +370,131 @@ var FileExtensions = map[string]string{
 	"zep":         "Zephir",
 	"zig":         "Zig",
 	"zsh":         "Zsh",
+	"mk":          "Makefile",
+}
+
+var shebang2Ext = map[string]string{
+	"gosh":    "scm",
+	"make":    "make",
+	"perl":    "pl",
+	"rc":      "plan9sh",
+	"python":  "py",
+	"ruby":    "rb",
+	"escript": "erl",
+}
+
+// GetShebang returns the language from the shebang line.
+func GetShebang(line string) (shebangLang string, ok bool) {
+	ret := reShebangEnv.FindAllStringSubmatch(line, -1)
+	if ret != nil && len(ret[0]) == 3 {
+		shebangLang = ret[0][2]
+		if sl, ok := shebang2Ext[shebangLang]; ok {
+			return sl, ok
+		}
+		return shebangLang, true
+	}
+
+	ret = reShebangLang.FindAllStringSubmatch(line, -1)
+	if ret != nil && len(ret[0]) >= 2 {
+		shebangLang = ret[0][1]
+		if sl, ok := shebang2Ext[shebangLang]; ok {
+			return sl, ok
+		}
+		return shebangLang, true
+	}
+
+	return "", false
+}
+
+// GetFileTypeByShebang returns the language from the shebang line.
+func GetFileTypeByShebang(path string) (shebangLang string, ok bool) {
+	f, err := os.Open(path)
+	if err != nil {
+		return // ignore error
+	}
+
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+
+	reader := bufio.NewReader(f)
+	line, err := reader.ReadBytes('\n')
+	if err != nil {
+		return
+	}
+	line = bytes.TrimLeftFunc(line, unicode.IsSpace)
+
+	if len(line) > 2 && line[0] == '#' && line[1] == '!' {
+		return GetShebang(string(line))
+	}
+	return
+}
+
+// GetFileType get the file type from the file path.
+func GetFileType(path string, opts *option.GClocOptions) (ext string, ok bool) {
+	ext = filepath.Ext(path)
+	base := filepath.Base(path)
+
+	switch ext {
+	case ".m", ".v", ".fs", ".r", ".ts":
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return "", false
+		}
+		lang := enry.GetLanguage(path, content)
+		if opts.Debug {
+			fmt.Printf("path=%v, lang=%v\n", path, lang)
+		}
+		return lang, true
+	case ".mo":
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return "", false
+		}
+		lang := enry.GetLanguage(path, content)
+		if opts.Debug {
+			fmt.Printf("path=%v, lang=%v\n", path, lang)
+		}
+		if lang != "" {
+			return "Motoko", true
+		}
+		return lang, true
+	}
+
+	switch base {
+	case "meson.build", "meson_options.txt":
+		return "meson", true
+	case "CMakeLists.txt":
+		return "cmake", true
+	case "configure.ac":
+		return "m4", true
+	case "Makefile.am":
+		return "makefile", true
+	case "build.xml":
+		return "Ant", true
+	case "pom.xml":
+		return "maven", true
+	}
+
+	switch strings.ToLower(base) {
+	case "justfile":
+		return "just", true
+	case "makefile":
+		return "makefile", true
+	case "nukefile":
+		return "nu", true
+	case "rebar": // skip
+		return "", false
+	}
+
+	shebangLang, ok := GetFileTypeByShebang(path)
+	if ok {
+		return shebangLang, true
+	}
+
+	if len(ext) >= 2 {
+		return ext[1:], true
+	}
+
+	return ext, ok
 }

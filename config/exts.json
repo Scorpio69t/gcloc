@@ -244,5 +244,6 @@
   "yul":         "Yul",
   "zep":         "Zephir",
   "zig":         "Zig",
-  "zsh":         "Zsh"
+  "zsh":         "Zsh",
+  "mk":          "Makefile"
 }
