@@ -1,3 +1,3 @@
-module github.com/Scorpio69t/gcloc
+module gcloc
 
 go 1.23.0
