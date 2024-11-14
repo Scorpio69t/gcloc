@@ -19,7 +19,7 @@ type GClocFile struct {
 	Name     string `xml:"name,attr" json:"name"`         // Name of the file
 	Language string `xml:"language,attr" json:"language"` // Language of the file
 	Codes    uint32 `xml:"codes,attr" json:"codes"`       // Number of lines of code
-	Comments uint32 `xml:"comments,attr" json:"comments"` // Number of lines of comments]
+	Comments uint32 `xml:"comments,attr" json:"comments"` // Number of lines of comments
 	Blanks   uint32 `xml:"blanks,attr" json:"blanks"`     // Number of blank lines
 }
 
