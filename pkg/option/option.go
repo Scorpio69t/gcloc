@@ -6,6 +6,7 @@ import "regexp"
 type GClocOptions struct {
 	Debug            bool                // Debug mode
 	SkipDuplicated   bool                // Skip duplicated files
+	MaxLineLength    int                 // Maximum line length
 	ExcludeExts      map[string]struct{} // Excluded extensions
 	IncludeLanguages map[string]struct{} // Included languages
 	ReNotMatch       *regexp.Regexp      // Regular expression for not matching files
@@ -26,6 +27,7 @@ func NewGClocOptions() *GClocOptions {
 	return &GClocOptions{
 		Debug:            false,
 		SkipDuplicated:   false,
+		MaxLineLength:    1024 * 1024, // 1MB
 		ExcludeExts:      make(map[string]struct{}),
 		IncludeLanguages: make(map[string]struct{}),
 	}
