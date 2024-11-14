@@ -1,6 +1,10 @@
 package file
 
-import "sort"
+import (
+	"gcloc/pkg/option"
+	log "gcloc/pkg/simplelog"
+	"sort"
+)
 
 // GClocFile represents a file with its lines of code, comments and blanks.
 type GClocFile struct {
@@ -51,4 +55,46 @@ func (gf GClocFiles) SortByBlanks() {
 // Len returns the number of files.
 func (gf GClocFiles) Len() int {
 	return len(gf)
+}
+
+// onBlank is called when a blank line is found.
+func onBlank(gClocFile *GClocFile, opts *option.GClocOptions, isInComments bool, line, lineOrg string) {
+	gClocFile.Blanks++
+
+	if opts.OnBlank != nil {
+		opts.OnBlank(line)
+	}
+
+	if opts.Debug {
+		log.Info("[BLANK, codes:%d, comments:%d, blanks:%d, isInComments:%v] %s",
+			gClocFile.Codes, gClocFile.Comments, gClocFile.Blanks, isInComments, lineOrg)
+	}
+}
+
+// onComment is called when a comment line is found.
+func onComment(gClocFile *GClocFile, opts *option.GClocOptions, isInComments bool, line, lineOrg string) {
+	gClocFile.Comments++
+
+	if opts.OnComment != nil {
+		opts.OnComment(line)
+	}
+
+	if opts.Debug {
+		log.Info("[COMMENT, codes:%d, comments:%d, blanks:%d, isInComments:%v] %s",
+			gClocFile.Codes, gClocFile.Comments, gClocFile.Blanks, isInComments, lineOrg)
+	}
+}
+
+// onCode is called when a code line is found.
+func onCode(gClocFile *GClocFile, opts *option.GClocOptions, isInComments bool, line, lineOrg string) {
+	gClocFile.Codes++
+
+	if opts.OnCode != nil {
+		opts.OnCode(line)
+	}
+
+	if opts.Debug {
+		log.Info("[CODE, codes:%d, comments:%d, blanks:%d, isInComments:%v] %s",
+			gClocFile.Codes, gClocFile.Comments, gClocFile.Blanks, isInComments, lineOrg)
+	}
 }
