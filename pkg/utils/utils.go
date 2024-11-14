@@ -3,9 +3,7 @@ package utils
 import (
 	"crypto/md5"
 	"fmt"
-	"gcloc/pkg/language"
 	"gcloc/pkg/option"
-	log "gcloc/pkg/simplelog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -35,6 +33,10 @@ func ContainComment(line string, multipleLines [][]string) bool {
 	for _, comments := range multipleLines {
 		for _, comment := range comments {
 			if strings.Contains(line, comment) {
+				// check if the comment is in the "string"
+				if strings.Contains(line, "\""+comment) || strings.Contains(line, comment+"\"") {
+					continue
+				}
 				return true
 			}
 		}
@@ -128,88 +130,4 @@ func CheckOptionMatch(path string, info os.FileInfo, opts *option.GClocOptions) 
 	}
 
 	return true
-}
-
-// shouldIgnore returns true if the path should be ignored.
-func shouldIgnore(path string, info os.FileInfo, vcsInRoot bool, opts *option.GClocOptions) bool {
-	if CheckDefaultIgnore(path, info, vcsInRoot) {
-		return true
-	}
-	if !CheckOptionMatch(path, info, opts) {
-		return true
-	}
-	return false
-}
-
-// processFile processes the file.
-func processFile(path, ext string, languages *language.DefinedLanguages, opts *option.GClocOptions, result map[string]*language.Language, fileCache map[string]struct{}) {
-	if targetExt, ok := language.FileExtensions[ext]; ok {
-		if _, ok := opts.ExcludeExts[targetExt]; ok {
-			return
-		}
-		if len(opts.IncludeLanguages) != 0 {
-			if _, ok := opts.IncludeLanguages[targetExt]; !ok {
-				return
-			}
-		}
-		if !opts.SkipDuplicated {
-			if CheckMD5Sum(path, fileCache) {
-				if opts.Debug {
-					log.Info("[ignore=%v] find same md5", path)
-				}
-				return
-			}
-		}
-		addFileToResult(path, targetExt, languages, result)
-	}
-}
-
-// addFileToResult adds the file to the result.
-func addFileToResult(path, targetExt string, languages *language.DefinedLanguages, result map[string]*language.Language) {
-	if _, ok := result[targetExt]; !ok {
-		definedLang := language.NewLanguage(
-			languages.Langs[targetExt].Name,
-			languages.Langs[targetExt].LineComments,
-			languages.Langs[targetExt].MultipleLines,
-		)
-		if len(languages.Langs[targetExt].RegexLineComments) > 0 {
-			definedLang.RegexLineComments = languages.Langs[targetExt].RegexLineComments
-		}
-		result[targetExt] = definedLang
-	}
-	result[targetExt].Files = append(result[targetExt].Files, path)
-}
-
-// GetAllFiles return all the files to be analyzed in paths.
-func GetAllFiles(paths []string, languages *language.DefinedLanguages, opts *option.GClocOptions) (result map[string]*language.Language, err error) {
-	result = make(map[string]*language.Language)
-	fileCache := make(map[string]struct{})
-
-	for _, root := range paths {
-		vcsInRoot := IsVCSDir(root)
-		err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
-				return nil
-			}
-
-			if shouldIgnore(path, info, vcsInRoot, opts) {
-				return nil
-			}
-
-			if ext, ok := language.GetFileType(path, opts); ok {
-				processFile(path, ext, languages, opts, result, fileCache)
-			}
-			return nil
-		})
-
-		if err != nil {
-			if opts.Debug {
-				log.Error("error: %v", err)
-			}
-			return nil, err
-		}
-	}
-
-	return
 }
