@@ -316,7 +316,6 @@ func NewDefinedLanguages() *DefinedLanguages {
 			"Zephir":              NewLanguage("Zephir", []string{"//"}, [][]string{{"/*", "*/"}}),
 			"Zig":                 NewLanguage("Zig", []string{"//", "///"}, [][]string{{"", ""}}),
 			"Zsh":                 NewLanguage("Zsh", []string{"#"}, [][]string{{"", ""}}),
-			"mk":                  NewLanguage("mk", []string{"#"}, [][]string{{"", ""}}),
 		},
 	}
 }
