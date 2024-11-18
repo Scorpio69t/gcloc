@@ -11,7 +11,7 @@ import (
 
 // showLangCmd represents the showLang command
 var showLangCmd = &cobra.Command{
-	Use:   "showLang",
+	Use:   "show-lang",
 	Short: "List all supported languages and their extensions",
 	Run: func(cmd *cobra.Command, args []string) {
 		languages := language.NewDefinedLanguages()
