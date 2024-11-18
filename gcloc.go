@@ -1,10 +1,10 @@
 package gcloc
 
 import (
-	"gcloc/pkg/file"
-	"gcloc/pkg/language"
-	"gcloc/pkg/option"
-	log "gcloc/pkg/simplelog"
+	"github.com/Scorpio69t/gcloc/pkg/file"
+	"github.com/Scorpio69t/gcloc/pkg/language"
+	"github.com/Scorpio69t/gcloc/pkg/option"
+	log "github.com/Scorpio69t/gcloc/pkg/simplelog"
 )
 
 // Parser is the main struct for parsing files.

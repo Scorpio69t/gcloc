@@ -2,11 +2,11 @@ package file
 
 import (
 	"bufio"
-	"gcloc/pkg/bspool"
-	"gcloc/pkg/language"
-	"gcloc/pkg/option"
-	log "gcloc/pkg/simplelog"
-	"gcloc/pkg/utils"
+	"github.com/Scorpio69t/gcloc/pkg/bspool"
+	"github.com/Scorpio69t/gcloc/pkg/language"
+	"github.com/Scorpio69t/gcloc/pkg/option"
+	log "github.com/Scorpio69t/gcloc/pkg/simplelog"
+	"github.com/Scorpio69t/gcloc/pkg/utils"
 	"io"
 	"os"
 	"sort"

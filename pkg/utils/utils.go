@@ -3,7 +3,7 @@ package utils
 import (
 	"crypto/md5"
 	"fmt"
-	"gcloc/pkg/option"
+	"github.com/Scorpio69t/gcloc/pkg/option"
 	"os"
 	"path/filepath"
 	"strings"

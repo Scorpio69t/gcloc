@@ -2,8 +2,8 @@ package file
 
 import (
 	"bytes"
-	"gcloc/pkg/language"
-	"gcloc/pkg/option"
+	"github.com/Scorpio69t/gcloc/pkg/language"
+	"github.com/Scorpio69t/gcloc/pkg/option"
 	"os"
 	"path/filepath"
 	"testing"

@@ -1,8 +1,8 @@
 package json
 
 import (
-	"gcloc/pkg/file"
-	"gcloc/pkg/language"
+	"github.com/Scorpio69t/gcloc/pkg/file"
+	"github.com/Scorpio69t/gcloc/pkg/language"
 )
 
 // LanguagesResult defines the result of the analysis in JSON format.

@@ -3,8 +3,8 @@ package json
 import (
 	"encoding/json"
 	"fmt"
-	"gcloc/pkg/file"
-	"gcloc/pkg/language"
+	"github.com/Scorpio69t/gcloc/pkg/file"
+	"github.com/Scorpio69t/gcloc/pkg/language"
 	"testing"
 )
 

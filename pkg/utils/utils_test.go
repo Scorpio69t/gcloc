@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"gcloc/pkg/option"
+	"github.com/Scorpio69t/gcloc/pkg/option"
 	"os"
 	"regexp"
 	"testing"

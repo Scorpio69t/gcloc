@@ -3,8 +3,8 @@ package xml
 import (
 	"encoding/xml"
 	"fmt"
-	"gcloc/pkg/file"
-	"gcloc/pkg/language"
+	"github.com/Scorpio69t/gcloc/pkg/file"
+	"github.com/Scorpio69t/gcloc/pkg/language"
 )
 
 // XMLResultType is the result type in XML format.
