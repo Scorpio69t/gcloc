@@ -16,6 +16,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -112,6 +113,7 @@ func runGCloc(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
+	start := time.Now() // get current time
 	paths := args
 
 	languages := language.NewDefinedLanguages()
@@ -122,6 +124,7 @@ func runGCloc(cmd *cobra.Command, args []string) {
 
 	parser := gcloc.NewParser(languages, gClocOpts)
 	result, err := parser.Analyze(paths)
+	elapsed := time.Since(start) // Count time
 	if err != nil {
 		fmt.Printf("fail gcloc analyze. error: %v\n", err)
 		return
@@ -129,7 +132,7 @@ func runGCloc(cmd *cobra.Command, args []string) {
 
 	// Output result
 	builder := newOutputBuilder(result, &opts)
-	builder.WriteResult()
+	builder.WriteResult(elapsed)
 }
 
 // setupOptions setup options for cloc
@@ -281,12 +284,20 @@ func writeResultWithByFile(opts *options, result *gcloc.Result) {
 	}
 }
 
-func (o *outputBuilder) WriteResult() {
-	// write header
-	o.WriteHeader()
-
+func (o *outputBuilder) WriteResult(elapsed time.Duration) {
 	clocLanguages := o.result.Languages
 	total := o.result.Total
+
+	seconds := elapsed.Seconds()
+	// calculate files per second and lines per second
+	filesPerSecond := float64(total.Total) / seconds
+	linesPerSecond := float64(total.Codes) / seconds
+
+	// write time elapsed with seconds
+	fmt.Printf("github.com/Scorpio69t/gcloc T=%0.2f s (%0.1f files/s %0.1f lines/s)\n", seconds, filesPerSecond, linesPerSecond)
+
+	// write header
+	o.WriteHeader()
 
 	if o.opts.ByFile {
 		writeResultWithByFile(o.opts, o.result)

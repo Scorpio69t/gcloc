@@ -775,11 +775,13 @@ func processFile(path, ext string, languages *DefinedLanguages, opts *option.GCl
 		if _, ok := opts.ExcludeExts[targetExt]; ok {
 			return
 		}
+
 		if len(opts.IncludeLanguages) != 0 {
 			if _, ok := opts.IncludeLanguages[targetExt]; !ok {
 				return
 			}
 		}
+
 		if !opts.SkipDuplicated {
 			if utils.CheckMD5Sum(path, fileCache) {
 				if opts.Debug {
