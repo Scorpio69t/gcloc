@@ -1,6 +1,6 @@
 module github.com/Scorpio69t/gcloc
 
-go 1.23.0
+go 1.20
 
 require (
 	github.com/go-enry/go-enry/v2 v2.9.1
