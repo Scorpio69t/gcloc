@@ -11,17 +11,16 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "gcloc",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Use:   "gcloc [flags] PATH...",
+	Short: "A tool for counting source code files and lines in various programming languages",
+	Long: `gcloc is a tool for counting source code files and lines in various programming languages.
+It supports a variety of programming languages, and can be customized to support more languages.
+It is a simple and easy-to-use tool that can help you quickly count the number of source code files and lines in a project.`,
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Args: cobra.MinimumNArgs(1),
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Run: runGCloc,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -43,4 +42,8 @@ func init() {
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+func runGCloc(cmd *cobra.Command, args []string) {
+	// Do Stuff Here
 }
