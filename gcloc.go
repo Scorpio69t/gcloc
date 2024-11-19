@@ -5,6 +5,8 @@ import (
 	"github.com/Scorpio69t/gcloc/pkg/language"
 	"github.com/Scorpio69t/gcloc/pkg/option"
 	log "github.com/Scorpio69t/gcloc/pkg/simplelog"
+	"github.com/Scorpio69t/gcloc/pkg/syncmap"
+	"sync"
 )
 
 // Parser is the main struct for parsing files.
@@ -50,17 +52,24 @@ func (p *Parser) Analyze(paths []string) (*Result, error) {
 		}
 	}
 
-	gClocFiles := make(map[string]*file.GClocFile, num)
+	gClocFiles := syncmap.NewSyncMap[string, *file.GClocFile](num)
 	for _, lang := range languages {
+		wg := sync.WaitGroup{}
 		for _, f := range lang.Files {
-			cf := file.AnalyzeFile(f, lang, p.opts)
-			cf.Language = lang.Name
+			wg.Add(1)
+			go func(f string, w *sync.WaitGroup) {
+				defer w.Done()
+				cf := file.AnalyzeFile(f, lang, p.opts)
+				cf.Language = lang.Name
 
-			lang.Codes += cf.Codes
-			lang.Comments += cf.Comments
-			lang.Blanks += cf.Blanks
-			gClocFiles[f] = cf
+				lang.Codes += cf.Codes
+				lang.Comments += cf.Comments
+				lang.Blanks += cf.Blanks
+				gClocFiles.Store(f, cf)
+			}(f, &wg)
 		}
+
+		wg.Wait()
 
 		files := uint32(len(lang.Files))
 		if len(lang.Files) <= 0 {
@@ -75,7 +84,7 @@ func (p *Parser) Analyze(paths []string) (*Result, error) {
 
 	return &Result{
 		Total:         total,
-		Files:         gClocFiles,
+		Files:         gClocFiles.ToMap(), // Convert syncmap to map.
 		Languages:     languages,
 		MaxPathLength: maxPathLen,
 	}, nil
