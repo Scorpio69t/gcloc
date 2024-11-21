@@ -1,6 +1,8 @@
 
 # gcloc: Source Code Line Counter
 
+**[中文](./README.zh.md)** | **English**
+
 **gcloc** is an open-source tool designed to count source code files and lines in various programming languages. It supports a wide range of languages and is easily extendable to include custom languages. Simple and easy to use, gcloc helps developers quickly understand their codebase and track changes over time.
 
 ---
