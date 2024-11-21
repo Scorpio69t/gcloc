@@ -3,7 +3,7 @@
 MODULE := github.com/Scorpio69t/gcloc
 APP_NAME := gcloc
 VERSION_FULL := $(shell git describe --tags --always)
-VERSION := $(shell echo $(VERSION_FULL) | awk -F'-' '{print $1}')
+VERSION := $(shell echo $(VERSION_FULL) | cut -d'-' -f1)
 COMMIT := $(shell git rev-parse --short HEAD)
 DATE := $(shell date +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -12,6 +12,8 @@ DOCKER_REPO := scorpio69t/$(APP_NAME)
 LD_FLAGS := -ldflags "-X $(MODULE)/cmd.Version=$(VERSION) -X $(MODULE)/cmd.GitCommit=$(COMMIT) -X $(MODULE)/cmd.BuildDate=$(DATE)"
 
 build: cleanup-package
+	@echo "Full Version: $(VERSION_FULL)"
+	@echo "Clean Version: $(VERSION)"
 	mkdir -p bin
 	GO111MODULE=on go build $(LD_FLAGS) -o ./bin/gcloc app/gcloc/main.go
 
