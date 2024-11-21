@@ -9,8 +9,9 @@ builds:
     binary: gcloc
     ldflags:
       - -s -w
-      - -X main.Version={{.Version}}
-      - -X main.GitCommit={{.ShortCommit}}
+      - -X github.com/Scorpio69t/gcloc/cmd.Version={{.Version}}
+      - -X github.com/Scorpio69t/gcloc/cmd.GitCommit={{.ShortCommit}}
+      - -X github.com/Scorpio69t/gcloc/cmd.BuildDate={{.Date}}
     env:
       - CGO_ENABLED=0
     goos:

@@ -9,25 +9,21 @@ import (
 	"strings"
 )
 
-// Version is version string for gcloc command
-var Version = "v0.0.1"
+// Variables to store version and Git info
+var (
+	Version   = "dev"  // Default value
+	GitCommit = "none" // Default value
+	BuildDate = "unknown"
+)
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of gcloc",
 	Run: func(cmd *cobra.Command, args []string) {
-		// get version
-		version := Version
-
-		// get git commit hash
-		commitHash := getGitHash()
-		if commitHash != "" {
-			version += " (" + commitHash + ")"
-		}
-
-		// print version
-		cmd.Println(version)
+		cmd.Println("Version: ", Version)
+		cmd.Println("Git Commit: ", GitCommit)
+		cmd.Println("Build Date: ", BuildDate)
 	},
 }
 
