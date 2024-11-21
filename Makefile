@@ -2,7 +2,8 @@
 
 MODULE := github.com/Scorpio69t/gcloc
 APP_NAME := gcloc
-VERSION := $(shell git describe --tags --always | awk -F'-' '{print $1}')
+VERSION_FULL := $(shell git describe --tags --always)
+VERSION := $(shell echo $(VERSION_FULL) | awk -F'-' '{print $1}')
 COMMIT := $(shell git rev-parse --short HEAD)
 DATE := $(shell date +"%Y-%m-%dT%H:%M:%SZ")
 
