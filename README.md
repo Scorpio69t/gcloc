@@ -3,9 +3,18 @@
 
 **gcloc** is an open-source tool designed to count source code files and lines in various programming languages. It supports a wide range of languages and is easily extendable to include custom languages. Simple and easy to use, gcloc helps developers quickly understand their codebase and track changes over time.
 
+---
+
+## Acknowledgment
+
+This project builds upon the foundational work of [hhatto's gocloc](https://github.com/hhatto/gocloc). We sincerely thank the original author for their contributions to the open-source community, which provided the basis for gcloc's further development.
+
+---
+
 ## Features
 - **Language Support**: Counts files, blank lines, comment lines, and code lines for multiple programming languages.
 - **Customizable**: Add support for more languages as needed.
+- **High Performance**: Utilizes concurrency for efficient file retrieval and analysis, making it fast even for large codebases.
 - **Output Formats**: Supports multiple output formats, including default table view, XML, JSON, and Sloccount format.
 - **Filters**: Include or exclude files and directories based on extensions, regex patterns, or specific languages.
 - **Detailed Statistics**: Optionally report results for each source file.
@@ -17,11 +26,7 @@
 Clone the repository and build the executable:
 
 ```bash
-git clone https://github.com/Scorpio69t/gcloc.git
-cd gcloc
-go build -o bin/gcloc app/gcloc/main.go
-# For Windows
-go build -o bin/gcloc.exe app/gcloc/main.go
+go install github.com/Scorpio69t/gcloc/app/gcloc@latest
 ```
 
 Alternatively, download the precompiled binary from the [Releases](https://github.com/Scorpio69t/gcloc/releases) page.
@@ -66,19 +71,20 @@ Total                          249          14710           7060          75508
 - `version`: Print the version number of gcloc.
 
 #### Flags
-| Flag                | Description                                                                                       |
-|---------------------|---------------------------------------------------------------------------------------------------|
-| `--by-file`         | Report results for every encountered source file.                                                |
-| `--debug`           | Dump debug log for developers.                                                                   |
-| `--exclude-ext`     | Exclude file name extensions (comma-separated).                                                  |
-| `--include-lang`    | Include specific languages (comma-separated).                                                    |
-| `--match`           | Include files matching a regex pattern.                                                          |
-| `--not-match`       | Exclude files matching a regex pattern.                                                          |
-| `--match-d`         | Include directories matching a regex pattern.                                                    |
-| `--not-match-d`     | Exclude directories matching a regex pattern.                                                    |
-| `--output-type`     | Choose an output format: `default`, `gcloc-xml`, `sloccount`, `json` (default: `default`).         |
-| `--skip-duplicated` | Skip duplicated files.                                                                            |
-| `--sort`            | Sort results by `name`, `files`, `blanks`, `comments`, or `codes` (default: `codes`).             |
+| Flag                | Description                                                                                |
+|---------------------|--------------------------------------------------------------------------------------------|
+| `--by-file`         | Report results for every encountered source file.                                          |
+| `--debug`           | Dump debug log for developers.                                                             |
+| `--exclude-ext`     | Exclude file name extensions (comma-separated).                                            |
+| `--exclude-lang`    | Exclude specific languages (comma-separated).                                              |
+| `--include-lang`    | Include specific languages (comma-separated).                                              |
+| `--match`           | Include files matching a regex pattern.                                                    |
+| `--not-match`       | Exclude files matching a regex pattern.                                                    |
+| `--match-d`         | Include directories matching a regex pattern.                                              |
+| `--not-match-d`     | Exclude directories matching a regex pattern.                                              |
+| `--output-type`     | Choose an output format: `default`, `gcloc-xml`, `sloccount`, `json` (default: `default`). |
+| `--skip-duplicated` | Skip duplicated files.                                                                     |
+| `--sort`            | Sort results by `name`, `files`, `blanks`, `comments`, or `codes` (default: `codes`).      |
 
 ---
 
