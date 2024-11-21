@@ -1,12 +1,13 @@
 .PHONY: test build
 
+MODULE := github.com/Scorpio69t/gcloc
+VERSION := $(shell git describe --tags --always)
+COMMIT := $(shell git rev-parse --short HEAD)
+DATE := $(shell date +"%Y-%m-%dT%H:%M:%SZ")
+
 build:
 	mkdir -p bin
-	MODULE=github.com/Scorpio69t/gcloc
-	VERSION=$(shell git describe --tags --always)
-    COMMIT=$(shell git rev-parse --short HEAD)
-    DATE=$(shell date +"%Y-%m-%dT%H:%M:%SZ")
-	GO111MODULE=on go build -ldflags "-X $MODULE/cmd.Version=$VERSION -X $MODULE/cmd.GitCommit=$COMMIT -X $MODULE/cmd.BuildDate=$DATE" -o ./bin/gcloc app/gcloc/main.go
+	GO111MODULE=on go build -ldflags "-X $(MODULE)/cmd.Version=$(VERSION) -X $(MODULE)/cmd.GitCommit=$(COMMIT) -X $(MODULE)/cmd.BuildDate=$(DATE)" -o ./bin/gcloc app/gcloc/main.go
 
 update-package:
 	GO111MODULE=on go get -u github.com/Scorpio69t/gcloc
