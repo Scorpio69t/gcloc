@@ -772,10 +772,18 @@ func shouldIgnore(path string, info os.FileInfo, vcsInRoot bool, opts *option.GC
 // processFile processes the file.
 func processFile(path, ext string, languages *DefinedLanguages, opts *option.GClocOptions, result map[string]*Language, fileCache map[string]struct{}) {
 	if targetExt, ok := FileExtensions[ext]; ok {
-		if _, ok := opts.ExcludeExts[targetExt]; ok {
+		if _, ok := opts.ExcludeExts[ext]; ok {
 			return
 		}
 
+		// exclude languages
+		if len(opts.ExcludeLanguages) != 0 {
+			if _, ok := opts.ExcludeLanguages[targetExt]; ok {
+				return
+			}
+		}
+
+		// include languages
 		if len(opts.IncludeLanguages) != 0 {
 			if _, ok := opts.IncludeLanguages[targetExt]; !ok {
 				return

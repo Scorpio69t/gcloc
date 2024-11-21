@@ -8,6 +8,7 @@ type GClocOptions struct {
 	SkipDuplicated   bool                // Skip duplicated files
 	MaxLineLength    int                 // Maximum line length
 	ExcludeExts      map[string]struct{} // Excluded extensions
+	ExcludeLanguages map[string]struct{} // Excluded languages
 	IncludeLanguages map[string]struct{} // Included languages
 	ReNotMatch       *regexp.Regexp      // Regular expression for not matching files
 	ReMatch          *regexp.Regexp      // Regular expression for matching files
@@ -29,6 +30,7 @@ func NewGClocOptions() *GClocOptions {
 		SkipDuplicated:   false,
 		MaxLineLength:    1024 * 1024, // 1MB
 		ExcludeExts:      make(map[string]struct{}),
+		ExcludeLanguages: make(map[string]struct{}),
 		IncludeLanguages: make(map[string]struct{}),
 	}
 }

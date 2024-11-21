@@ -26,6 +26,7 @@ type options struct {
 	SortTag        string
 	OutputType     string
 	ExcludeExt     string
+	ExcludeLang    string
 	IncludeLang    string
 	Match          string
 	NotMatch       string
@@ -98,6 +99,7 @@ func init() {
 	rootCmd.Flags().StringVar(&opts.SortTag, "sort", "codes", "sort based on a certain column [name, files, blanks, comments, codes]")
 	rootCmd.Flags().StringVar(&opts.OutputType, "output-type", "default", "output type [default, gcloc-xml, sloccount, json]")
 	rootCmd.Flags().StringVar(&opts.ExcludeExt, "exclude-ext", "", "exclude file name extensions (comma-separated)")
+	rootCmd.Flags().StringVar(&opts.ExcludeLang, "exclude-lang", "", "exclude language names (comma-separated)")
 	rootCmd.Flags().StringVar(&opts.IncludeLang, "include-lang", "", "include language names (comma-separated)")
 	rootCmd.Flags().StringVar(&opts.Match, "match", "", "include file name (regex)")
 	rootCmd.Flags().StringVar(&opts.NotMatch, "not-match", "", "exclude file name (regex)")
@@ -140,6 +142,13 @@ func setupOptions(clocOpts *option.GClocOptions, languages *language.DefinedLang
 	// Exclude extensions
 	for _, ext := range strings.Split(opts.ExcludeExt, ",") {
 		clocOpts.ExcludeExts[ext] = struct{}{}
+	}
+
+	// Exclude languages
+	for _, lang := range strings.Split(opts.ExcludeLang, ",") {
+		if _, ok := languages.Langs[lang]; ok {
+			clocOpts.ExcludeLanguages[lang] = struct{}{}
+		}
 	}
 
 	// Include languages
