@@ -32,6 +32,15 @@ func (s *SyncMap[K, V]) Store(key K, value V) {
 	s.m[key] = value
 }
 
+// Has returns true if the key exists in the map.
+func (s *SyncMap[K, V]) Has(key K) bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	_, ok := s.m[key]
+	return ok
+}
+
 // Delete deletes a value from the map.
 func (s *SyncMap[K, V]) Delete(key K) {
 	s.mu.Lock()
