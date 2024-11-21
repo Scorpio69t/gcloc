@@ -23,15 +23,18 @@ This project builds upon the foundational work of [hhatto's gocloc](https://gith
 
 ## Future Development
 
--[ ] Support for Git Repositories
+- [ ] Support for Git Repositories
+
   - Analyze Git repositories directly without specifying a directory.
   - Display statistics for the entire repository, including commit history.
 
--[ ] Web Interface
+- [ ] Web Interface
+
   - Create a web interface for gcloc to provide a user-friendly experience.
   - Allow users to upload files or directories for analysis.
 
--[ ] Support for Archive Files
+- [ ] Support for Archive Files
+
   - Analyze compressed files (e.g., .zip, .tar.gz) without manual extraction.
   - Extract and analyze files on-the-fly to provide accurate statistics.
 
