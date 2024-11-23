@@ -58,8 +58,8 @@ func (p *Parser) Analyze(paths []string) (*Result, error) {
 	for _, lang := range languages {
 		for _, f := range lang.Files {
 			wg.Add(1)
-			go func(f string, l *language.Language, w *sync.WaitGroup) {
-				defer w.Done()
+			go func(f string, l *language.Language) {
+				defer wg.Done()
 				cf := file.AnalyzeFile(f, l, p.opts)
 				cf.Language = l.Name
 
@@ -67,7 +67,7 @@ func (p *Parser) Analyze(paths []string) (*Result, error) {
 				l.Comments += cf.Comments
 				l.Blanks += cf.Blanks
 				gClocFiles.Store(f, cf)
-			}(f, lang, &wg)
+			}(f, lang)
 		}
 	}
 
