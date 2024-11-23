@@ -53,26 +53,29 @@ func (p *Parser) Analyze(paths []string) (*Result, error) {
 	}
 
 	gClocFiles := syncmap.NewSyncMap[string, *file.GClocFile](num)
+	var wg sync.WaitGroup // WaitGroup for the goroutines.
+
 	for _, lang := range languages {
-		wg := sync.WaitGroup{}
 		for _, f := range lang.Files {
 			wg.Add(1)
-			go func(f string, w *sync.WaitGroup) {
+			go func(f string, l *language.Language, w *sync.WaitGroup) {
 				defer w.Done()
-				cf := file.AnalyzeFile(f, lang, p.opts)
-				cf.Language = lang.Name
+				cf := file.AnalyzeFile(f, l, p.opts)
+				cf.Language = l.Name
 
-				lang.Codes += cf.Codes
-				lang.Comments += cf.Comments
-				lang.Blanks += cf.Blanks
+				l.Codes += cf.Codes
+				l.Comments += cf.Comments
+				l.Blanks += cf.Blanks
 				gClocFiles.Store(f, cf)
-			}(f, &wg)
+			}(f, lang, &wg)
 		}
+	}
 
-		wg.Wait()
+	wg.Wait()
 
+	for _, lang := range languages {
 		files := uint32(len(lang.Files))
-		if len(lang.Files) <= 0 {
+		if files <= 0 {
 			continue
 		}
 
