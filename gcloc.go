@@ -6,7 +6,6 @@ import (
 	"github.com/Scorpio69t/gcloc/pkg/option"
 	log "github.com/Scorpio69t/gcloc/pkg/simplelog"
 	"github.com/Scorpio69t/gcloc/pkg/syncmap"
-	"sync"
 )
 
 // Parser is the main struct for parsing files.
@@ -53,25 +52,18 @@ func (p *Parser) Analyze(paths []string) (*Result, error) {
 	}
 
 	gClocFiles := syncmap.NewSyncMap[string, *file.GClocFile](num)
-	var wg sync.WaitGroup // WaitGroup for the goroutines.
 
 	for _, lang := range languages {
-		for _, f := range lang.Files {
-			wg.Add(1)
-			go func(f string, l *language.Language) {
-				defer wg.Done()
-				cf := file.AnalyzeFile(f, l, p.opts)
-				cf.Language = l.Name
+		for _, filename := range lang.Files {
+			cf := file.AnalyzeFile(filename, lang, p.opts)
+			cf.Language = lang.Name
 
-				l.Codes += cf.Codes
-				l.Comments += cf.Comments
-				l.Blanks += cf.Blanks
-				gClocFiles.Store(f, cf)
-			}(f, lang)
+			lang.Codes += cf.Codes
+			lang.Comments += cf.Comments
+			lang.Blanks += cf.Blanks
+			gClocFiles.Store(filename, cf)
 		}
 	}
-
-	wg.Wait()
 
 	for _, lang := range languages {
 		files := uint32(len(lang.Files))
