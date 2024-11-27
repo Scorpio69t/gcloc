@@ -63,9 +63,7 @@ func (p *Parser) Analyze(paths []string) (*Result, error) {
 			lang.Blanks += cf.Blanks
 			gClocFiles.Store(filename, cf)
 		}
-	}
 
-	for _, lang := range languages {
 		files := uint32(len(lang.Files))
 		if files <= 0 {
 			continue
