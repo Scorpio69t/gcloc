@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/Scorpio69t/gcloc/pkg/option"
 	log "github.com/Scorpio69t/gcloc/pkg/simplelog"
+	"github.com/Scorpio69t/gcloc/pkg/syncmap"
 	"github.com/Scorpio69t/gcloc/pkg/utils"
 	"github.com/go-enry/go-enry/v2"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"unicode"
 )
 
@@ -770,7 +772,11 @@ func shouldIgnore(path string, info os.FileInfo, vcsInRoot bool, opts *option.GC
 }
 
 // processFile processes the file.
-func processFile(path, ext string, languages *DefinedLanguages, opts *option.GClocOptions, result map[string]*Language, fileCache map[string]struct{}) {
+func processFile(path, ext string, languages *DefinedLanguages, opts *option.GClocOptions,
+	result *syncmap.SyncMap[string, *Language], fileCache *syncmap.SyncMap[string, struct{}], mu *sync.Mutex) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if targetExt, ok := FileExtensions[ext]; ok {
 		if _, ok := opts.ExcludeExts[ext]; ok {
 			return
@@ -798,36 +804,44 @@ func processFile(path, ext string, languages *DefinedLanguages, opts *option.GCl
 				return
 			}
 		}
+
 		addFileToResult(path, targetExt, languages, result)
 	}
 }
 
 // addFileToResult adds the file to the result.
-func addFileToResult(path, targetExt string, languages *DefinedLanguages, result map[string]*Language) {
-	if _, ok := result[targetExt]; !ok {
+func addFileToResult(path, targetExt string, languages *DefinedLanguages,
+	result *syncmap.SyncMap[string, *Language]) {
+	if ok := result.Has(targetExt); !ok {
 		definedLang := NewLanguage(
 			languages.Langs[targetExt].Name,
 			languages.Langs[targetExt].LineComments,
 			languages.Langs[targetExt].MultipleLines,
 		)
+
 		if len(languages.Langs[targetExt].RegexLineComments) > 0 {
 			definedLang.RegexLineComments = languages.Langs[targetExt].RegexLineComments
 		}
-		result[targetExt] = definedLang
+		result.Store(targetExt, definedLang)
 	}
-	result[targetExt].Files = append(result[targetExt].Files, path)
+
+	lang, _ := result.Load(targetExt)
+	lang.Files = append(lang.Files, path)
+	result.Store(targetExt, lang)
 }
 
 // GetAllFiles return all the files to be analyzed in paths.
-func GetAllFiles(paths []string, languages *DefinedLanguages, opts *option.GClocOptions) (result map[string]*Language, err error) {
-	result = make(map[string]*Language)
-	fileCache := make(map[string]struct{})
+func GetAllFiles(paths []string, languages *DefinedLanguages, opts *option.GClocOptions) (map[string]*Language, error) {
+	result := syncmap.NewSyncMap[string, *Language](0)
+	fileCache := syncmap.NewSyncMap[string, struct{}](0)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 
 	for _, root := range paths {
 		vcsInRoot := utils.IsVCSDir(root)
-		err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
+				log.Error("error: %v", err)
 				return nil
 			}
 
@@ -835,9 +849,16 @@ func GetAllFiles(paths []string, languages *DefinedLanguages, opts *option.GCloc
 				return nil
 			}
 
-			if ext, ok := GetFileType(path, opts); ok {
-				processFile(path, ext, languages, opts, result, fileCache)
-			}
+			wg.Add(1)
+
+			go func(p string) {
+				defer wg.Done()
+
+				if ext, ok := GetFileType(p, opts); ok {
+					processFile(p, ext, languages, opts, result, fileCache, &mu)
+				}
+			}(path)
+
 			return nil
 		})
 
@@ -849,5 +870,7 @@ func GetAllFiles(paths []string, languages *DefinedLanguages, opts *option.GCloc
 		}
 	}
 
-	return
+	wg.Wait()
+
+	return result.ToMap(), nil
 }
