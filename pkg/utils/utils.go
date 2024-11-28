@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/Scorpio69t/gcloc/pkg/option"
+	"github.com/Scorpio69t/gcloc/pkg/syncmap"
 	"os"
 	"path/filepath"
 	"strings"
@@ -65,7 +66,7 @@ func MD5Sum(path string) ([16]byte, error) {
 }
 
 // CheckMD5Sum checks if the file's MD5 sum is in the cache.
-func CheckMD5Sum(path string, fileCache map[string]struct{}) bool {
+func CheckMD5Sum(path string, fileCache *syncmap.SyncMap[string, struct{}]) bool {
 	// Get the file's MD5 sum
 	md5Sum, err := MD5Sum(path)
 	if err != nil {
@@ -74,12 +75,12 @@ func CheckMD5Sum(path string, fileCache map[string]struct{}) bool {
 
 	// Check if the file's MD5 sum is in the cache
 	hash := fmt.Sprintf("%x", md5Sum)
-	if _, ok := fileCache[hash]; ok {
+	if ok := fileCache.Has(hash); ok {
 		return true
 	}
 
 	// Add the file's MD5 sum to the cache
-	fileCache[hash] = struct{}{}
+	fileCache.Store(hash, struct{}{})
 	return false
 }
 
