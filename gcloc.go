@@ -6,6 +6,7 @@ import (
 	"github.com/Scorpio69t/gcloc/pkg/option"
 	log "github.com/Scorpio69t/gcloc/pkg/simplelog"
 	"github.com/Scorpio69t/gcloc/pkg/syncmap"
+	"sync"
 )
 
 // Parser is the main struct for parsing files.
@@ -52,28 +53,39 @@ func (p *Parser) Analyze(paths []string) (*Result, error) {
 	}
 
 	gClocFiles := syncmap.NewSyncMap[string, *file.GClocFile](num)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 
 	for _, lang := range languages {
-		for _, filename := range lang.Files {
-			cf := file.AnalyzeFile(filename, lang, p.opts)
-			cf.Language = lang.Name
+		wg.Add(1)
 
-			lang.Codes += cf.Codes
-			lang.Comments += cf.Comments
-			lang.Blanks += cf.Blanks
-			gClocFiles.Store(filename, cf)
-		}
+		go func(l *language.Language) {
+			defer wg.Done()
 
-		files := uint32(len(lang.Files))
-		if files <= 0 {
-			continue
-		}
+			for _, filename := range l.Files {
+				cf := file.AnalyzeFile(filename, l, p.opts)
+				cf.Language = l.Name
 
-		total.Total += files
-		total.Blanks += lang.Blanks
-		total.Comments += lang.Comments
-		total.Codes += lang.Codes
+				l.Codes += cf.Codes
+				l.Comments += cf.Comments
+				l.Blanks += cf.Blanks
+				gClocFiles.Store(filename, cf)
+			}
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			files := uint32(len(l.Files))
+			if files > 0 {
+				total.Total += files
+				total.Blanks += l.Blanks
+				total.Comments += l.Comments
+				total.Codes += l.Codes
+			}
+		}(lang)
 	}
+
+	wg.Wait()
 
 	return &Result{
 		Total:         total,
