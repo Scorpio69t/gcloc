@@ -116,8 +116,6 @@ func runGCloc(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	start := time.Now() // get current time
-
 	var paths []string
 	var repoPaths []string
 
@@ -148,6 +146,8 @@ func runGCloc(cmd *cobra.Command, args []string) {
 
 	// Setup options
 	setupOptions(gClocOpts, languages)
+
+	start := time.Now() // get current time
 
 	parser := gcloc.NewParser(languages, gClocOpts)
 	result, err := parser.Analyze(paths)
