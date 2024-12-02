@@ -130,8 +130,9 @@ func runGCloc(cmd *cobra.Command, args []string) {
 			}
 			paths = append(paths, tempPath)
 			repoPaths = append(repoPaths, tempPath)
+		} else {
+			paths = append(paths, arg)
 		}
-		paths = append(paths, arg)
 	}
 
 	defer func() {
