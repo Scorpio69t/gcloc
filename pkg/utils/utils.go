@@ -132,3 +132,10 @@ func CheckOptionMatch(path string, info os.FileInfo, opts *option.GClocOptions) 
 
 	return true
 }
+
+// IsGitURL returns true if the path is a git URL.
+func IsGitURL(path string) bool {
+	return strings.HasPrefix(path, "http://") ||
+		strings.HasPrefix(path, "https://") ||
+		strings.HasSuffix(path, ".git")
+}
