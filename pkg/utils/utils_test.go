@@ -2,6 +2,7 @@ package utils
 
 import (
 	"github.com/Scorpio69t/gcloc/pkg/option"
+	"github.com/Scorpio69t/gcloc/pkg/syncmap"
 	"os"
 	"regexp"
 	"testing"
@@ -25,7 +26,7 @@ func TestContainsComment(t *testing.T) {
 }
 
 func TestCheckMD5SumIgnore(t *testing.T) {
-	fileCache := make(map[string]struct{})
+	fileCache := syncmap.NewSyncMap[string, struct{}](0)
 
 	if CheckMD5Sum("./utils_test.go", fileCache) {
 		t.Errorf("invalid sequence")
@@ -108,5 +109,15 @@ func TestCheckOptionMatch(t *testing.T) {
 	fi = MockFileInfo{FileName: "one.go", IsDirectory: false}
 	if !CheckOptionMatch("/thisisdir/one.go", fi, opts) {
 		t.Errorf("invalid logic: renotmatchdir is not ignore")
+	}
+}
+
+func TestIsGitURL(t *testing.T) {
+	if !IsGitURL("http://github.com") {
+		t.Errorf("invalid logic: should not be git url")
+	}
+
+	if !IsGitURL("https://github.com/Scorpio69t/gcloc.git") {
+		t.Errorf("invalid logic: should be git url")
 	}
 }

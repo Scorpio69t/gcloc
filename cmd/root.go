@@ -12,6 +12,7 @@ import (
 	"github.com/Scorpio69t/gcloc/pkg/language"
 	"github.com/Scorpio69t/gcloc/pkg/option"
 	log "github.com/Scorpio69t/gcloc/pkg/simplelog"
+	"github.com/Scorpio69t/gcloc/pkg/utils"
 	"github.com/Scorpio69t/gcloc/pkg/xml"
 	"os"
 	"regexp"
@@ -115,14 +116,38 @@ func runGCloc(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	start := time.Now() // get current time
-	paths := args
+	var paths []string
+	var repoPaths []string
+
+	for _, arg := range args {
+		if utils.IsGitURL(arg) {
+			tempPath, err := utils.CloneGitRepo(arg)
+			if err != nil {
+				fmt.Printf("fail to clone git repo[%s]. error: %v\n", arg, err)
+				return
+			}
+			paths = append(paths, tempPath)
+			repoPaths = append(repoPaths, tempPath)
+		} else {
+			paths = append(paths, arg)
+		}
+	}
+
+	defer func() {
+		for _, path := range repoPaths {
+			if err := os.RemoveAll(path); err != nil {
+				fmt.Printf("fail to remove git repo[%s]. error: %v\n", path, err)
+			}
+		}
+	}()
 
 	languages := language.NewDefinedLanguages()
 	gClocOpts := option.NewGClocOptions()
 
 	// Setup options
 	setupOptions(gClocOpts, languages)
+
+	start := time.Now() // get current time
 
 	parser := gcloc.NewParser(languages, gClocOpts)
 	result, err := parser.Analyze(paths)

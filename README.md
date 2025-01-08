@@ -25,7 +25,7 @@ This project builds upon the foundational work of [hhatto's gocloc](https://gith
 
 ## Future Development
 
-- [ ] Support for Git Repositories
+- [X] Support for Git Repositories
 
   - Analyze Git repositories directly without specifying a directory.
   - Display statistics for the entire repository, including commit history.

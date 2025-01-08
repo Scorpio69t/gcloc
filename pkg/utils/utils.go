@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"github.com/Scorpio69t/gcloc/pkg/option"
 	"github.com/Scorpio69t/gcloc/pkg/syncmap"
+	"github.com/go-git/go-git/v5"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const (
@@ -131,4 +133,28 @@ func CheckOptionMatch(path string, info os.FileInfo, opts *option.GClocOptions) 
 	}
 
 	return true
+}
+
+// IsGitURL returns true if the path is a git URL.
+func IsGitURL(path string) bool {
+	return strings.HasPrefix(path, "http://") ||
+		strings.HasPrefix(path, "https://") ||
+		strings.HasSuffix(path, ".git")
+}
+
+// CloneGitRepo clones the git repository.
+func CloneGitRepo(repoURL string) (string, error) {
+	tempDir := fmt.Sprintf("./temp-repo-%s", time.Now().Format("20060102150405"))
+
+	// Clone the git repository
+	_, err := git.PlainClone(tempDir, false, &git.CloneOptions{
+		URL:      repoURL,
+		Progress: os.Stdout,
+	})
+	if err != nil {
+		_ = os.RemoveAll(tempDir)
+		return "", err
+	}
+
+	return tempDir, nil
 }
