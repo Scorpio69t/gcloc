@@ -48,6 +48,7 @@ This project builds upon the foundational work of [hhatto's gocloc](https://gith
 go install github.com/Scorpio69t/gcloc/app/gcloc@latest
 ```
 
+
 Alternatively, download the precompiled binary from the [Releases](https://github.com/Scorpio69t/gcloc/releases) page.
 
 ---
