@@ -13,6 +13,34 @@ This project builds upon the foundational work of [hhatto's gocloc](https://gith
 
 ---
 
+```mermaid
+graph TD
+    A[main.go<br/>程序入口] --> B[cmd/<br/>命令注册]
+    B --> B1[root.go<br/>主命令]
+    B --> B2[showLang.go<br/>支持语言展示]
+    B --> B3[version.go<br/>版本信息]
+
+    A --> C[pkg/ 核心功能模块]
+    C --> C1[bspool/<br/>并发任务池]
+    C --> C2[cloc/<br/>代码统计逻辑]
+    C --> C3[render/<br/>结果输出]
+    C --> C4[walker/<br/>文件遍历与过滤]
+
+    A --> D[config/exts.json<br/>语言映射配置]
+    A --> E[.github/<br/>CI/CD 自动化]
+    E --> E1[go.yml<br/>Go 编译测试]
+    E --> E2[release.yml<br/>自动发布]
+    E --> E3[codeql-analysis.yml<br/>代码安全分析]
+
+    A --> F[Dockerfile<br/>支持容器化部署]
+    A --> G[Makefile<br/>支持跨平台编译]
+
+    C2 --> G1[内部语言定义表]
+    C2 --> G2[注释/空行/代码行分析器]
+```
+
+---
+
 ## Features
 - **Language Support**: Counts files, blank lines, comment lines, and code lines for multiple programming languages.
 - **Customizable**: Add support for more languages as needed.
