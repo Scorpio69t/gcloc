@@ -51,6 +51,8 @@ type analyzeResponse struct {
 func Start(addr string) error {
 	app := iris.New()
 
+	app.HandleDir("/", iris.Dir("./web/ui"))
+
 	app.Get("/languages", languagesHandler)
 	app.Post("/analyze", analyzeHandler)
 	app.Post("/upload", uploadHandler)

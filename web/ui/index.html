@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>gcloc Web UI</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; }
+table { border-collapse: collapse; margin-top: 10px; }
+th, td { border: 1px solid #ccc; padding: 4px 8px; }
+pre { background: #f6f8fa; padding: 10px; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>gcloc Web Interface</h1>
+<div>
+<label>Upload zip file: <input type="file" id="zipFile" accept=".zip"></label>
+</div>
+<div>
+<label>Paths (one per line):<br>
+<textarea id="paths" rows="3" cols="60"></textarea></label>
+</div>
+<div>
+<label><input type="checkbox" id="byFile">By File</label>
+<label>Sort:
+<select id="sort">
+<option value="codes">codes</option>
+<option value="name">name</option>
+<option value="files">files</option>
+<option value="blanks">blanks</option>
+<option value="comments">comments</option>
+</select>
+</label>
+</div>
+<div>
+<label>Exclude Ext: <input type="text" id="excludeExt"></label>
+<label>Exclude Lang: <input type="text" id="excludeLang"></label>
+<label>Include Lang: <input type="text" id="includeLang"></label>
+</div>
+<div>
+<label>Match: <input type="text" id="match"></label>
+<label>Not Match: <input type="text" id="notMatch"></label>
+</div>
+<div>
+<label>Match Dir: <input type="text" id="matchDir"></label>
+<label>Not Match Dir: <input type="text" id="notMatchDir"></label>
+</div>
+<div>
+<label><input type="checkbox" id="debug">Debug</label>
+<label><input type="checkbox" id="skipDuplicated">Skip Duplicated</label>
+</div>
+<div>
+<button id="analyzeBtn">Analyze</button>
+</div>
+<h2>Result</h2>
+<pre id="result"></pre>
+<h2>File Tree</h2>
+<pre id="tree"></pre>
+<script src="script.js"></script>
+</body>
+</html>
