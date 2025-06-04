@@ -14,6 +14,7 @@ type GClocOptions struct {
 	ReMatch          *regexp.Regexp      // Regular expression for matching files
 	ReNotMatchDir    *regexp.Regexp      // Regular expression for not matching directories
 	ReMatchDir       *regexp.Regexp      // Regular expression for matching directories
+	Sort             string              // Sort order for the output
 
 	// OnCode is triggered for each line of code.
 	OnCode func(line string)
@@ -32,5 +33,6 @@ func NewGClocOptions() *GClocOptions {
 		ExcludeExts:      make(map[string]struct{}),
 		ExcludeLanguages: make(map[string]struct{}),
 		IncludeLanguages: make(map[string]struct{}),
+		Sort:             "code",
 	}
 }

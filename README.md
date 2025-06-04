@@ -58,7 +58,7 @@ graph TD
   - Analyze Git repositories directly without specifying a directory.
   - Display statistics for the entire repository, including commit history.
 
-- [ ] Web Interface
+- [X] Web Interface
 
   - Create a web interface for gcloc to provide a user-friendly experience.
   - Allow users to upload files or directories for analysis.
@@ -161,6 +161,10 @@ gcloc --output-type json .
 ### Show Supported Languages
 ```bash
 gcloc show-lang
+```
+### Start a web server
+```bash
+gcloc web
 ```
 
 ---

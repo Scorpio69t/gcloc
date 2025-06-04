@@ -187,8 +187,9 @@
         }
 
         const headers = ["name", "file_count", "codes", "comments", "blanks"];
+        const show_headers = ["语言名称", "文件数目", "代码行数", "注释行数", "空白行数"];
         resultTable.innerHTML = `
-      <thead><tr>${headers.map(h => `<th class="px-4 py-2">${h}</th>`).join('')}</tr></thead>
+      <thead><tr>${show_headers.map(h => `<th class="px-4 py-2">${h}</th>`).join('')}</tr></thead>
       <tbody>
         ${languages.map(lang => `
           <tr>${headers.map(h => `<td class="px-4 py-2 text-right">${lang[h]}</td>`).join('')}</tr>

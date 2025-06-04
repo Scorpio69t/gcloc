@@ -129,11 +129,29 @@ func analyzeHandler(ctx iris.Context) {
 		for _, f := range result.Files {
 			files = append(files, *f)
 		}
+
+		if files != nil && files.Len() > 0 {
+			switch opts.Sort {
+			case "name":
+				files.SortByName()
+			case "codes":
+				files.SortByCodes()
+			case "blanks":
+				files.SortByBlanks()
+			case "comments":
+				files.SortByComments()
+			}
+		}
+
 		resp := analyzeResponse{
 			FilesResult: json.NewFilesResultFromGCloc(result.Total, files),
 			TimeUsed:    fmt.Sprintf("%0.2fs", elapsed.Seconds()),
 		}
-		ctx.JSON(resp)
+		err := ctx.JSON(resp)
+		if err != nil {
+			log.Error("failed to write response: %v", err)
+			return
+		}
 		return
 	}
 
@@ -144,11 +162,30 @@ func analyzeHandler(ctx iris.Context) {
 		}
 	}
 
+	if langsRes != nil && langsRes.Len() > 0 {
+		switch opts.Sort {
+		case "name":
+			langsRes.SortByName()
+		case "files":
+			langsRes.SortByFiles()
+		case "codes":
+			langsRes.SortByCodes()
+		case "blanks":
+			langsRes.SortByBlanks()
+		case "comments":
+			langsRes.SortByComments()
+		}
+	}
+
 	resp := analyzeResponse{
 		LanguagesResult: json.NewLanguagesResultFromGCloc(result.Total, langsRes),
 		TimeUsed:        fmt.Sprintf("%0.2fs", elapsed.Seconds()),
 	}
-	ctx.JSON(resp)
+	err = ctx.JSON(resp)
+	if err != nil {
+		log.Error("failed to write response: %v", err)
+		return
+	}
 }
 
 func setupOptionsFromRequest(clocOpts *option.GClocOptions, langs *language.DefinedLanguages, req *AnalyzeRequest) {
@@ -167,6 +204,11 @@ func setupOptionsFromRequest(clocOpts *option.GClocOptions, langs *language.Defi
 			clocOpts.IncludeLanguages[l] = struct{}{}
 		}
 	}
+
+	if req.Sort != "" {
+		clocOpts.Sort = req.Sort
+	}
+
 	if req.Match != "" {
 		clocOpts.ReMatch = regexp.MustCompile(req.Match)
 	}
