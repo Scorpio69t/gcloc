@@ -1,19 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="zh" data-theme="dark">
 <head>
-    <meta charset="UTF-8"/>
-    <title>gcloc Web UI - Dark</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>gcloc 可视化界面</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/daisyui"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&display=swap" rel="stylesheet" />
+    <style>
+        pre {
+            font-family: 'Noto Sans SC', 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans p-8 min-h-screen">
 <div class="max-w-6xl mx-auto space-y-8">
-    <h1 class="text-4xl font-bold text-cyan-400">gcloc Web Interface</h1>
+    <h1 class="text-4xl font-bold text-cyan-400">gcloc 可视化界面</h1>
 
     <!-- Input Panel -->
     <div class="bg-gray-800 p-6 rounded-xl shadow-lg space-y-6">
         <div>
-            <label class="block text-sm font-semibold mb-2">Upload zip file</label>
+            <label class="block text-sm font-semibold mb-2">上传 zip 文件</label>
             <input type="file" id="zipFile" accept=".zip"
                    class="block w-full text-sm text-white file:mr-4 file:py-2 file:px-4
              file:rounded-full file:border-0 file:text-sm file:font-semibold
@@ -21,63 +31,71 @@
         </div>
 
         <div>
-            <label class="block mb-1">Paths (one per line)</label>
+            <label class="block mb-1">路径（每行一个）</label>
             <textarea id="paths" rows="3"
                       class="textarea textarea-bordered w-full bg-gray-700 text-white border-gray-600"
-                      placeholder="Enter paths..."></textarea>
+                      placeholder="请输入路径..."></textarea>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label class="inline-flex items-center space-x-2">
                 <input type="checkbox" id="byFile" class="checkbox checkbox-info"/>
-                <span>By File</span>
+                <span>按文件统计</span>
             </label>
             <label>
-                <span class="text-sm font-medium">Sort</span>
+                <span class="text-sm font-medium">排序依据</span>
                 <select id="sort" class="select select-bordered w-full bg-gray-700 text-white border-gray-600 mt-1">
-                    <option value="codes">codes</option>
-                    <option value="name">name</option>
-                    <option value="files">files</option>
-                    <option value="blanks">blanks</option>
-                    <option value="comments">comments</option>
+                    <option value="codes">代码行数</option>
+                    <option value="name">名称</option>
+                    <option value="files">文件数</option>
+                    <option value="blanks">空行</option>
+                    <option value="comments">注释</option>
                 </select>
             </label>
         </div>
 
         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <input type="text" id="excludeExt" placeholder="Exclude Ext"
+            <input type="text" id="excludeExt" placeholder="排除扩展名"
                    class="input input-bordered bg-gray-700 text-white border-gray-600"/>
-            <input type="text" id="excludeLang" placeholder="Exclude Lang"
+            <input type="text" id="excludeLang" placeholder="排除语言"
                    class="input input-bordered bg-gray-700 text-white border-gray-600"/>
-            <input type="text" id="includeLang" placeholder="Include Lang"
+            <input type="text" id="includeLang" placeholder="包含语言"
                    class="input input-bordered bg-gray-700 text-white border-gray-600"/>
-            <input type="text" id="match" placeholder="Match"
+            <input type="text" id="match" placeholder="匹配文件名"
                    class="input input-bordered bg-gray-700 text-white border-gray-600"/>
-            <input type="text" id="notMatch" placeholder="Not Match"
+            <input type="text" id="notMatch" placeholder="排除文件名"
                    class="input input-bordered bg-gray-700 text-white border-gray-600"/>
-            <input type="text" id="matchDir" placeholder="Match Dir"
+            <input type="text" id="matchDir" placeholder="匹配目录"
                    class="input input-bordered bg-gray-700 text-white border-gray-600"/>
-            <input type="text" id="notMatchDir" placeholder="Not Match Dir"
+            <input type="text" id="notMatchDir" placeholder="排除目录"
                    class="input input-bordered bg-gray-700 text-white border-gray-600"/>
         </div>
 
         <div class="flex space-x-6 pt-2">
             <label class="inline-flex items-center space-x-2">
                 <input type="checkbox" id="debug" class="checkbox checkbox-warning"/>
-                <span>Debug</span>
+                <span>调试模式</span>
             </label>
             <label class="inline-flex items-center space-x-2">
                 <input type="checkbox" id="skipDuplicated" class="checkbox checkbox-warning"/>
-                <span>Skip Duplicated</span>
+                <span>跳过重复文件</span>
             </label>
         </div>
 
-        <button id="analyzeBtn" class="btn btn-info mt-4 w-full md:w-auto">Analyze</button>
+        <div class="flex items-center gap-4">
+            <label class="text-sm font-medium">最大目录层级：</label>
+            <input id="maxDepth" type="number" min="1" max="10" value="3"
+                   class="input input-sm input-bordered bg-gray-700 text-white border-gray-600 w-20"/>
+        </div>
+
+        <button id="analyzeBtn" class="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded mt-4 w-full md:w-auto">
+            开始分析
+        </button>
     </div>
 
     <!-- Result Table -->
     <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-        <h2 class="text-2xl font-semibold text-cyan-300 mb-4">Result Table</h2>
+        <h2 class="text-2xl font-semibold text-cyan-300 mb-4">结果统计表格</h2>
         <div class="overflow-x-auto">
             <table id="resultTable" class="table w-full text-sm text-white"></table>
         </div>
@@ -85,7 +103,7 @@
 
     <!-- Charts -->
     <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-        <h2 class="text-2xl font-semibold text-cyan-300 mb-4">Charts</h2>
+        <h2 class="text-2xl font-semibold text-cyan-300 mb-4">结果统计图表</h2>
         <div class="flex flex-col items-center gap-6">
             <canvas id="barChart" class="w-full max-w-4xl h-[400px]"></canvas>
             <canvas id="pieChart" class="w-full max-w-[500px] h-[500px]"></canvas>
@@ -94,8 +112,12 @@
 
     <!-- File Tree -->
     <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
-        <h2 class="text-2xl font-semibold text-cyan-300 mb-4">File Tree</h2>
-        <pre id="tree" class="bg-gray-900 p-4 rounded overflow-x-auto text-sm text-green-400"></pre>
+        <h2 class="text-2xl font-semibold text-cyan-300 mb-4">文件结构树</h2>
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-sm">显示结果如下：</span>
+            <button onclick="exportTree()" class="bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-4 rounded mt-4 w-full md:w-auto">导出 tree.txt</button>
+        </div>
+        <pre id="tree" class="bg-gray-900 p-4 rounded overflow-x-auto text-sm text-green-400 font-mono whitespace-pre-wrap"></pre>
     </div>
 </div>
 
@@ -106,8 +128,8 @@
     async function analyze() {
         const resultTable = document.getElementById('resultTable');
         const treePre = document.getElementById('tree');
-        resultTable.innerHTML = '<tr><td class="text-cyan-300">Loading...</td></tr>';
-        treePre.textContent = '';
+        resultTable.innerHTML = '<tr><td class="text-cyan-300">分析中...</td></tr>';
+        treePre.textContent = '正在分析...';
 
         let uploadId = '';
         const zipInput = document.getElementById('zipFile');
@@ -185,7 +207,7 @@
         if (uploadId) {
             const treeRes = await fetch('/tree?id=' + encodeURIComponent(uploadId));
             const tree = await treeRes.json();
-            treePre.textContent = JSON.stringify(tree, null, 2);
+            treePre.textContent = renderTreeLikeBash(tree);
         }
     }
 
@@ -230,6 +252,34 @@
                 plugins: {legend: {labels: {color: '#fff'}}}
             }
         });
+    }
+
+    function renderTreeLikeBash(node, prefix = '', isLast = true) {
+        const lines = [];
+        const connector = isLast ? '└── ' : '├── ';
+        lines.push(prefix + connector + node.name);
+
+        if (node.children && node.children.length > 0) {
+            const newPrefix = prefix + (isLast ? '    ' : '│   ');
+            node.children.forEach((child, index) => {
+                const last = index === node.children.length - 1;
+                lines.push(renderTreeLikeBash(child, newPrefix, last));
+            });
+        }
+
+        return lines.join('\n');
+    }
+
+    function exportTree() {
+        const blob = new Blob([window.currentTreeText || ''], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'tree.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 
     document.getElementById('analyzeBtn').addEventListener('click', analyze);
