@@ -1,12 +1,11 @@
 module github.com/Scorpio69t/gcloc
 
-go 1.22
-
-toolchain go1.24.0
+go 1.24
 
 require (
 	github.com/go-enry/go-enry/v2 v2.9.1
 	github.com/go-git/go-git/v5 v5.12.0
+	github.com/google/uuid v1.6.0
 	github.com/kataras/iris/v12 v12.2.11
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/cobra v1.8.1
@@ -35,7 +34,6 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gomarkdown/markdown v0.0.0-20240328165702-4d01890c35c0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/iris-contrib/schema v0.0.6 // indirect
