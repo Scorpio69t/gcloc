@@ -141,6 +141,17 @@
             uploadId = data.id;
         }
 
+        const depth = document.getElementById('maxDepth').value;
+
+        const treeParams = new URLSearchParams({
+            id: uploadId,
+            depth,
+            matchDir: document.getElementById('matchDir').value,
+            notMatchDir: document.getElementById('notMatchDir').value,
+            match: document.getElementById('match').value,
+            notMatch: document.getElementById('notMatch').value
+        });
+
         const paths = document.getElementById('paths').value
             .split(/\n+/).map(p => p.trim()).filter(Boolean);
 
@@ -205,9 +216,11 @@
         renderCharts(labels, codeCounts, commentCounts, blankCounts);
 
         if (uploadId) {
-            const treeRes = await fetch('/tree?id=' + encodeURIComponent(uploadId));
+            const treeRes = await fetch(`/tree?${treeParams.toString()}`);
             const tree = await treeRes.json();
-            treePre.textContent = renderTreeLikeBash(tree);
+            const treeText = renderTreeLikeBash(tree);
+            document.getElementById('tree').textContent = treeText;
+            window.currentTreeText = treeText;
         }
     }
 

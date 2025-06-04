@@ -15,7 +15,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
 
-	gcloc "github.com/Scorpio69t/gcloc"
+	"github.com/Scorpio69t/gcloc"
 	"github.com/Scorpio69t/gcloc/pkg/file"
 	"github.com/Scorpio69t/gcloc/pkg/json"
 	"github.com/Scorpio69t/gcloc/pkg/language"
@@ -261,11 +261,21 @@ func treeHandler(ctx iris.Context) {
 
 	depth, err := ctx.URLParamInt("depth")
 	if err != nil || depth <= 0 {
-		depth = 3 // 默认输出 3 层
+		depth = 3
+	}
+
+	matchDir := ctx.URLParam("matchDir")
+	notMatchDir := ctx.URLParam("notMatchDir")
+	var reMatch, reNotMatch *regexp.Regexp
+	if matchDir != "" {
+		reMatch, _ = regexp.Compile(matchDir)
+	}
+	if notMatchDir != "" {
+		reNotMatch, _ = regexp.Compile(notMatchDir)
 	}
 
 	root := p.(string)
-	node, err := buildFileTreeLimited(root, root, 0, depth)
+	node, err := buildFileTreeFiltered(root, root, 0, depth, reMatch, reNotMatch)
 	if err != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)
 		_, _ = ctx.WriteString(err.Error())
@@ -362,5 +372,36 @@ func buildFileTreeLimited(path, base string, level, maxDepth int) (FileNode, err
 		}
 	}
 
+	return node, nil
+}
+
+func buildFileTreeFiltered(path, base string, level, maxDepth int, reMatch, reNotMatch *regexp.Regexp) (FileNode, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return FileNode{}, err
+	}
+
+	rel := strings.TrimPrefix(strings.TrimPrefix(path, base), string(os.PathSeparator))
+	if reMatch != nil && !reMatch.MatchString(path) {
+		return FileNode{}, nil
+	}
+
+	if reNotMatch != nil && reNotMatch.MatchString(path) {
+		return FileNode{}, nil
+	}
+
+	node := FileNode{Name: info.Name(), Path: rel, IsDir: info.IsDir()}
+	if info.IsDir() && level < maxDepth {
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			return node, err
+		}
+		for _, e := range entries {
+			child, err := buildFileTreeFiltered(filepath.Join(path, e.Name()), base, level+1, maxDepth, reMatch, reNotMatch)
+			if err == nil && child.Name != "" {
+				node.Children = append(node.Children, child)
+			}
+		}
+	}
 	return node, nil
 }
