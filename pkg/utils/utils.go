@@ -16,10 +16,10 @@ const (
 	bom = "\xef\xbb\xbf" // UTF-8 BOM
 )
 
-// FileExits returns true if the file exists.
-func FileExits(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil || os.IsExist(err)
+// FileExists returns true if the file exists.
+func FileExists(path string) bool {
+        _, err := os.Stat(path)
+        return err == nil
 }
 
 // TrimBOM trims the UTF-8 BOM from the line.
