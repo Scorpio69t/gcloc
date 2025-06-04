@@ -1,60 +1,238 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<title>gcloc Web UI</title>
-<style>
-body { font-family: Arial, sans-serif; margin: 20px; }
-table { border-collapse: collapse; margin-top: 10px; }
-th, td { border: 1px solid #ccc; padding: 4px 8px; }
-pre { background: #f6f8fa; padding: 10px; overflow-x: auto; }
-</style>
+    <meta charset="UTF-8"/>
+    <title>gcloc Web UI - Dark</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-<h1>gcloc Web Interface</h1>
-<div>
-<label>Upload zip file: <input type="file" id="zipFile" accept=".zip"></label>
+<body class="bg-gray-900 text-gray-100 font-sans p-8 min-h-screen">
+<div class="max-w-6xl mx-auto space-y-8">
+    <h1 class="text-4xl font-bold text-cyan-400">gcloc Web Interface</h1>
+
+    <!-- Input Panel -->
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg space-y-6">
+        <div>
+            <label class="block text-sm font-semibold mb-2">Upload zip file</label>
+            <input type="file" id="zipFile" accept=".zip"
+                   class="block w-full text-sm text-white file:mr-4 file:py-2 file:px-4
+             file:rounded-full file:border-0 file:text-sm file:font-semibold
+             file:bg-cyan-600 file:text-white hover:file:bg-cyan-700"/>
+        </div>
+
+        <div>
+            <label class="block mb-1">Paths (one per line)</label>
+            <textarea id="paths" rows="3"
+                      class="textarea textarea-bordered w-full bg-gray-700 text-white border-gray-600"
+                      placeholder="Enter paths..."></textarea>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="inline-flex items-center space-x-2">
+                <input type="checkbox" id="byFile" class="checkbox checkbox-info"/>
+                <span>By File</span>
+            </label>
+            <label>
+                <span class="text-sm font-medium">Sort</span>
+                <select id="sort" class="select select-bordered w-full bg-gray-700 text-white border-gray-600 mt-1">
+                    <option value="codes">codes</option>
+                    <option value="name">name</option>
+                    <option value="files">files</option>
+                    <option value="blanks">blanks</option>
+                    <option value="comments">comments</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <input type="text" id="excludeExt" placeholder="Exclude Ext"
+                   class="input input-bordered bg-gray-700 text-white border-gray-600"/>
+            <input type="text" id="excludeLang" placeholder="Exclude Lang"
+                   class="input input-bordered bg-gray-700 text-white border-gray-600"/>
+            <input type="text" id="includeLang" placeholder="Include Lang"
+                   class="input input-bordered bg-gray-700 text-white border-gray-600"/>
+            <input type="text" id="match" placeholder="Match"
+                   class="input input-bordered bg-gray-700 text-white border-gray-600"/>
+            <input type="text" id="notMatch" placeholder="Not Match"
+                   class="input input-bordered bg-gray-700 text-white border-gray-600"/>
+            <input type="text" id="matchDir" placeholder="Match Dir"
+                   class="input input-bordered bg-gray-700 text-white border-gray-600"/>
+            <input type="text" id="notMatchDir" placeholder="Not Match Dir"
+                   class="input input-bordered bg-gray-700 text-white border-gray-600"/>
+        </div>
+
+        <div class="flex space-x-6 pt-2">
+            <label class="inline-flex items-center space-x-2">
+                <input type="checkbox" id="debug" class="checkbox checkbox-warning"/>
+                <span>Debug</span>
+            </label>
+            <label class="inline-flex items-center space-x-2">
+                <input type="checkbox" id="skipDuplicated" class="checkbox checkbox-warning"/>
+                <span>Skip Duplicated</span>
+            </label>
+        </div>
+
+        <button id="analyzeBtn" class="btn btn-info mt-4 w-full md:w-auto">Analyze</button>
+    </div>
+
+    <!-- Result Table -->
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-semibold text-cyan-300 mb-4">Result Table</h2>
+        <div class="overflow-x-auto">
+            <table id="resultTable" class="table w-full text-sm text-white"></table>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-semibold text-cyan-300 mb-4">Charts</h2>
+        <div class="flex flex-col items-center gap-6">
+            <canvas id="barChart" class="w-full max-w-4xl h-[400px]"></canvas>
+            <canvas id="pieChart" class="w-full max-w-[500px] h-[500px]"></canvas>
+        </div>
+    </div>
+
+    <!-- File Tree -->
+    <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+        <h2 class="text-2xl font-semibold text-cyan-300 mb-4">File Tree</h2>
+        <pre id="tree" class="bg-gray-900 p-4 rounded overflow-x-auto text-sm text-green-400"></pre>
+    </div>
 </div>
-<div>
-<label>Paths (one per line):<br>
-<textarea id="paths" rows="3" cols="60"></textarea></label>
-</div>
-<div>
-<label><input type="checkbox" id="byFile">By File</label>
-<label>Sort:
-<select id="sort">
-<option value="codes">codes</option>
-<option value="name">name</option>
-<option value="files">files</option>
-<option value="blanks">blanks</option>
-<option value="comments">comments</option>
-</select>
-</label>
-</div>
-<div>
-<label>Exclude Ext: <input type="text" id="excludeExt"></label>
-<label>Exclude Lang: <input type="text" id="excludeLang"></label>
-<label>Include Lang: <input type="text" id="includeLang"></label>
-</div>
-<div>
-<label>Match: <input type="text" id="match"></label>
-<label>Not Match: <input type="text" id="notMatch"></label>
-</div>
-<div>
-<label>Match Dir: <input type="text" id="matchDir"></label>
-<label>Not Match Dir: <input type="text" id="notMatchDir"></label>
-</div>
-<div>
-<label><input type="checkbox" id="debug">Debug</label>
-<label><input type="checkbox" id="skipDuplicated">Skip Duplicated</label>
-</div>
-<div>
-<button id="analyzeBtn">Analyze</button>
-</div>
-<h2>Result</h2>
-<pre id="result"></pre>
-<h2>File Tree</h2>
-<pre id="tree"></pre>
-<script src="script.js"></script>
+
+<script>
+    let barChartInstance = null;
+    let pieChartInstance = null;
+
+    async function analyze() {
+        const resultTable = document.getElementById('resultTable');
+        const treePre = document.getElementById('tree');
+        resultTable.innerHTML = '<tr><td class="text-cyan-300">Loading...</td></tr>';
+        treePre.textContent = '';
+
+        let uploadId = '';
+        const zipInput = document.getElementById('zipFile');
+        if (zipInput.files.length > 0) {
+            const form = new FormData();
+            form.append('file', zipInput.files[0]);
+            const resp = await fetch('/upload', {method: 'POST', body: form});
+            const data = await resp.json();
+            uploadId = data.id;
+        }
+
+        const paths = document.getElementById('paths').value
+            .split(/\n+/).map(p => p.trim()).filter(Boolean);
+
+        const body = {
+            paths,
+            uploadId,
+            byFile: document.getElementById('byFile').checked,
+            sort: document.getElementById('sort').value,
+            excludeExt: document.getElementById('excludeExt').value,
+            excludeLang: document.getElementById('excludeLang').value,
+            includeLang: document.getElementById('includeLang').value,
+            match: document.getElementById('match').value,
+            notMatch: document.getElementById('notMatch').value,
+            matchDir: document.getElementById('matchDir').value,
+            notMatchDir: document.getElementById('notMatchDir').value,
+            debug: document.getElementById('debug').checked,
+            skipDuplicated: document.getElementById('skipDuplicated').checked
+        };
+
+        const res = await fetch('/analyze', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(body)
+        });
+
+        const json = await res.json();
+        const languages = json.languages_result?.languages;
+        const total = json.languages_result?.total;
+
+        if (!Array.isArray(languages) || languages.length === 0) {
+            resultTable.innerHTML = `<tr><td class="text-red-400">No language data.</td></tr>`;
+            return;
+        }
+
+        const headers = ["name", "file_count", "codes", "comments", "blanks"];
+        resultTable.innerHTML = `
+      <thead><tr>${headers.map(h => `<th class="px-4 py-2">${h}</th>`).join('')}</tr></thead>
+      <tbody>
+        ${languages.map(lang => `
+          <tr>${headers.map(h => `<td class="px-4 py-2 text-right">${lang[h]}</td>`).join('')}</tr>
+        `).join('')}
+      </tbody>
+    `;
+
+        if (total) {
+            resultTable.querySelector("tbody").innerHTML += `
+        <tr class="font-bold border-t border-gray-500">
+          <td class="px-4 py-2">TOTAL</td>
+          <td class="px-4 py-2 text-right">${total.file_count}</td>
+          <td class="px-4 py-2 text-right">${total.codes}</td>
+          <td class="px-4 py-2 text-right">${total.comments}</td>
+          <td class="px-4 py-2 text-right">${total.blanks}</td>
+        </tr>
+      `;
+        }
+
+        const labels = languages.map(lang => lang.name);
+        const codeCounts = languages.map(lang => lang.codes);
+        const commentCounts = languages.map(lang => lang.comments);
+        const blankCounts = languages.map(lang => lang.blanks);
+
+        renderCharts(labels, codeCounts, commentCounts, blankCounts);
+
+        if (uploadId) {
+            const treeRes = await fetch('/tree?id=' + encodeURIComponent(uploadId));
+            const tree = await treeRes.json();
+            treePre.textContent = JSON.stringify(tree, null, 2);
+        }
+    }
+
+    function renderCharts(labels, codeCounts, commentCounts, blankCounts) {
+        if (barChartInstance) barChartInstance.destroy();
+        if (pieChartInstance) pieChartInstance.destroy();
+
+        barChartInstance = new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    {label: 'Code', data: codeCounts, backgroundColor: 'rgba(6,182,212,0.6)'},
+                    {label: 'Comments', data: commentCounts, backgroundColor: 'rgba(139,92,246,0.6)'},
+                    {label: 'Blanks', data: blankCounts, backgroundColor: 'rgba(251,191,36,0.6)'}
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {legend: {labels: {color: '#fff'}}},
+                scales: {
+                    x: {ticks: {color: '#ccc'}},
+                    y: {beginAtZero: true, ticks: {color: '#ccc'}}
+                }
+            }
+        });
+
+        pieChartInstance = new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Code Distribution',
+                    data: codeCounts,
+                    backgroundColor: [
+                        '#0ea5e9', '#06b6d4', '#22d3ee', '#67e8f9', '#a5f3fc',
+                        '#fde68a', '#fca5a5', '#fcd34d', '#c084fc', '#a5f3fc'
+                    ]
+                }]
+            },
+            options: {
+                plugins: {legend: {labels: {color: '#fff'}}}
+            }
+        });
+    }
+
+    document.getElementById('analyzeBtn').addEventListener('click', analyze);
+</script>
 </body>
 </html>

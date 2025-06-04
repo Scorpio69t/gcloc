@@ -3,6 +3,7 @@ package web
 import (
 	"archive/zip"
 	"fmt"
+	log "github.com/Scorpio69t/gcloc/pkg/simplelog"
 	"io"
 	"os"
 	"path/filepath"
@@ -42,8 +43,8 @@ type AnalyzeRequest struct {
 }
 
 type analyzeResponse struct {
-	json.LanguagesResult `json:",omitempty"`
-	json.FilesResult     `json:",omitempty"`
+	json.LanguagesResult `json:"languages_result"`
+	json.FilesResult     `json:"files_result"`
 	TimeUsed             string `json:"time_used"`
 }
 
@@ -236,7 +237,12 @@ func uploadHandler(ctx iris.Context) {
 
 	id := uuid.New().String()
 	uploadDirs.Store(id, dest)
-	ctx.JSON(UploadResponse{ID: id})
+	err = ctx.JSON(UploadResponse{ID: id})
+	if err != nil {
+		fmt.Printf("failed to write response: %v\n", err)
+		return
+	}
+	fmt.Printf("Uploaded and extracted to %s with ID %s\n", dest, id)
 }
 
 func treeHandler(ctx iris.Context) {
@@ -252,14 +258,25 @@ func treeHandler(ctx iris.Context) {
 		_, _ = ctx.WriteString("not found")
 		return
 	}
+
+	depth, err := ctx.URLParamInt("depth")
+	if err != nil || depth <= 0 {
+		depth = 3 // 默认输出 3 层
+	}
+
 	root := p.(string)
-	node, err := buildFileTree(root, root)
+	node, err := buildFileTreeLimited(root, root, 0, depth)
 	if err != nil {
 		ctx.StatusCode(iris.StatusInternalServerError)
 		_, _ = ctx.WriteString(err.Error())
 		return
 	}
-	ctx.JSON(node)
+
+	err = ctx.JSON(node)
+	if err != nil {
+		log.Error("failed to write response: %v", err)
+		return
+	}
 }
 
 func extractZip(zipPath, dest string) error {
@@ -321,5 +338,29 @@ func buildFileTree(path, base string) (FileNode, error) {
 			}
 		}
 	}
+	return node, nil
+}
+
+func buildFileTreeLimited(path, base string, level, maxDepth int) (FileNode, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return FileNode{}, err
+	}
+	rel := strings.TrimPrefix(strings.TrimPrefix(path, base), string(os.PathSeparator))
+	node := FileNode{Name: info.Name(), Path: rel, IsDir: info.IsDir()}
+
+	if info.IsDir() && level < maxDepth {
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			return node, err
+		}
+		for _, e := range entries {
+			child, err := buildFileTreeLimited(filepath.Join(path, e.Name()), base, level+1, maxDepth)
+			if err == nil {
+				node.Children = append(node.Children, child)
+			}
+		}
+	}
+
 	return node, nil
 }
