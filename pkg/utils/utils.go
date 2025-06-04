@@ -19,7 +19,7 @@ const (
 // FileExits returns true if the file exists.
 func FileExits(path string) bool {
 	_, err := os.Stat(path)
-	return err == nil || os.IsExist(err)
+	return err == nil || !os.IsNotExist(err)
 }
 
 // TrimBOM trims the UTF-8 BOM from the line.
