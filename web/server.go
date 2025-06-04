@@ -1,12 +1,17 @@
 package web
 
 import (
+	"archive/zip"
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/kataras/iris/v12"
 
 	gcloc "github.com/Scorpio69t/gcloc"
@@ -17,9 +22,12 @@ import (
 	"github.com/Scorpio69t/gcloc/pkg/utils"
 )
 
+var uploadDirs sync.Map // map[string]string
+
 // AnalyzeRequest defines the parameters accepted by the analyze endpoint.
 type AnalyzeRequest struct {
 	Paths          []string `json:"paths"`
+	UploadID       string   `json:"uploadId"`
 	ByFile         bool     `json:"byFile"`
 	Sort           string   `json:"sort"`
 	ExcludeExt     string   `json:"excludeExt"`
@@ -45,6 +53,8 @@ func Start(addr string) error {
 
 	app.Get("/languages", languagesHandler)
 	app.Post("/analyze", analyzeHandler)
+	app.Post("/upload", uploadHandler)
+	app.Get("/tree", treeHandler)
 
 	return app.Listen(addr)
 }
@@ -68,6 +78,15 @@ func analyzeHandler(ctx iris.Context) {
 
 	var paths []string
 	var repoPaths []string
+	if req.UploadID != "" {
+		if p, ok := uploadDirs.Load(req.UploadID); ok {
+			paths = append(paths, p.(string))
+		} else {
+			ctx.StatusCode(iris.StatusBadRequest)
+			_, _ = ctx.WriteString("invalid uploadId")
+			return
+		}
+	}
 	for _, p := range req.Paths {
 		if utils.IsGitURL(p) {
 			temp, err := utils.CloneGitRepo(p)
@@ -160,4 +179,145 @@ func setupOptionsFromRequest(clocOpts *option.GClocOptions, langs *language.Defi
 
 	clocOpts.Debug = req.Debug
 	clocOpts.SkipDuplicated = req.SkipDuplicated
+}
+
+type UploadResponse struct {
+	ID string `json:"id"`
+}
+
+type FileNode struct {
+	Name     string     `json:"name"`
+	Path     string     `json:"path"`
+	IsDir    bool       `json:"is_dir"`
+	Children []FileNode `json:"children,omitempty"`
+}
+
+func uploadHandler(ctx iris.Context) {
+	file, _, err := ctx.FormFile("file")
+	if err != nil {
+		ctx.StatusCode(iris.StatusBadRequest)
+		_, _ = ctx.WriteString(err.Error())
+		return
+	}
+	defer file.Close()
+
+	tmpZip, err := os.CreateTemp("", "upload-*.zip")
+	if err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		_, _ = ctx.WriteString(err.Error())
+		return
+	}
+	if _, err := io.Copy(tmpZip, file); err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		_ = os.Remove(tmpZip.Name())
+		_, _ = ctx.WriteString(err.Error())
+		return
+	}
+	tmpZip.Close()
+
+	dest, err := os.MkdirTemp("", "upload-dir-*")
+	if err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		_, _ = ctx.WriteString(err.Error())
+		_ = os.Remove(tmpZip.Name())
+		return
+	}
+
+	if err := extractZip(tmpZip.Name(), dest); err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		_, _ = ctx.WriteString(err.Error())
+		_ = os.RemoveAll(dest)
+		_ = os.Remove(tmpZip.Name())
+		return
+	}
+	_ = os.Remove(tmpZip.Name())
+
+	id := uuid.New().String()
+	uploadDirs.Store(id, dest)
+	ctx.JSON(UploadResponse{ID: id})
+}
+
+func treeHandler(ctx iris.Context) {
+	id := ctx.URLParam("id")
+	if id == "" {
+		ctx.StatusCode(iris.StatusBadRequest)
+		_, _ = ctx.WriteString("id required")
+		return
+	}
+	p, ok := uploadDirs.Load(id)
+	if !ok {
+		ctx.StatusCode(iris.StatusNotFound)
+		_, _ = ctx.WriteString("not found")
+		return
+	}
+	root := p.(string)
+	node, err := buildFileTree(root, root)
+	if err != nil {
+		ctx.StatusCode(iris.StatusInternalServerError)
+		_, _ = ctx.WriteString(err.Error())
+		return
+	}
+	ctx.JSON(node)
+}
+
+func extractZip(zipPath, dest string) error {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+	for _, f := range r.File {
+		fpath := filepath.Join(dest, f.Name)
+		if !strings.HasPrefix(fpath, filepath.Clean(dest)+string(os.PathSeparator)) {
+			continue
+		}
+		if f.FileInfo().IsDir() {
+			if err := os.MkdirAll(fpath, 0o755); err != nil {
+				return err
+			}
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(fpath), 0o755); err != nil {
+			return err
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		out, err := os.Create(fpath)
+		if err != nil {
+			rc.Close()
+			return err
+		}
+		if _, err := io.Copy(out, rc); err != nil {
+			out.Close()
+			rc.Close()
+			return err
+		}
+		out.Close()
+		rc.Close()
+	}
+	return nil
+}
+
+func buildFileTree(path, base string) (FileNode, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return FileNode{}, err
+	}
+	rel := strings.TrimPrefix(strings.TrimPrefix(path, base), string(os.PathSeparator))
+	node := FileNode{Name: info.Name(), Path: rel, IsDir: info.IsDir()}
+	if info.IsDir() {
+		entries, err := os.ReadDir(path)
+		if err != nil {
+			return node, err
+		}
+		for _, e := range entries {
+			child, err := buildFileTree(filepath.Join(path, e.Name()), base)
+			if err == nil {
+				node.Children = append(node.Children, child)
+			}
+		}
+	}
+	return node, nil
 }
