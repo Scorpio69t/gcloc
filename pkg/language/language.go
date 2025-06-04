@@ -341,9 +341,9 @@ func (l *DefinedLanguages) GetFormattedString() string {
 
 // loadFileExtsFromJson loads the file extensions from the JSON file.
 func loadFileExtsFromJson(filePath string) (map[string]string, error) {
-	if !utils.FileExits(filePath) {
-		return nil, errors.New("file extensions file does not exist")
-	}
+        if !utils.FileExists(filePath) {
+                return nil, errors.New("file extensions file does not exist")
+        }
 
 	var fileExts map[string]string
 	file, err := os.Open(filePath)
